@@ -894,7 +894,7 @@ def plot_chart(df, trades, title):
     fig.update_layout(title=title, xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
 
- strategy = st.selectbox("選擇策略", choices_strategies)
+    strategy = st.selectbox("選擇策略", choices_strategies)
 
     if strategy == choices_strategies[0]:
         st.subheader("MA 策略參數")
