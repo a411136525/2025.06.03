@@ -894,48 +894,40 @@ def plot_chart(df, trades, title):
     fig.update_layout(title=title, xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
 
-    strategy = st.selectbox("選擇策略", choices_strategies)
+strategy = st.selectbox("選擇策略", choices_strategies)
 
-    if strategy == choices_strategies[0]:
-        st.subheader("MA 策略參數")
-        long_p = st.slider("長期 MA 週期", 5, 60, 20)
-        short_p = st.slider("短期 MA 週期", 1, 20, 5)
-        stop_loss = st.slider("移動停損 (元/點)", 1, 100, 30)
-        trades = backtest_ma(df, long_p, short_p, stop_loss)
-        plot_chart(df, trades, "MA 策略回測圖")
+if strategy == choices_strategies[0]:
+    st.subheader("MA 策略參數")
+    long_p = st.slider("長期 MA 週期", 5, 60, 20)
+    short_p = st.slider("短期 MA 週期", 1, 20, 5)
+    stop_loss = st.slider("移動停損 (元/點)", 1, 100, 30)
+    trades = backtest_ma(df, long_p, short_p, stop_loss)
+    plot_chart(df, trades, "MA 策略回測圖")
 
+elif strategy == choices_strategies[1]:
+    df['RSI'] = calculate_rsi(df)
+    st.line_chart(df[['RSI']])
+    trades = backtest_rsi(df)
+    st.write("回測產生交易數：", len(trades))
+    st.write(trades[:5])
+    plot_chart(df, trades, "RSI 策略回測圖")
 
-    elif strategy == choices_strategies[1]:
-	    strategy = st.selectbox("選擇策略", choices_strategies)
+elif strategy == choices_strategies[2]:
+    df['MACD'], df['Signal'], df['Hist'] = calculate_macd(df)
+    st.line_chart(df[['MACD', 'Signal']])
+    trades = backtest_macd(df)
+    st.write("回測產生交易數：", len(trades))
+    st.write(trades[:5])
+    plot_chart(df, trades, "MACD 策略回測圖")
 
-    if strategy == choices_strategies[0]:
-	    st.subheader("MA 策略參數")
-	    long_p = st.slider("長期 MA 週期", 5, 60, 20)
-	    short_p = st.slider("短期 MA 週期", 1, 20, 5)
-	    stop_loss = st.slider("移動停損 (元/點)", 1, 100, 30)
-	    trades = backtest_ma(df, long_p, short_p, stop_loss)
-	    plot_chart(df, trades, "MA 策略回測圖")
-    elif strategy == choices_strategies[1]:
-	    df['RSI'] = calculate_rsi(df)  # 計算 RSI
-	    st.line_chart(df[['RSI']])     # 顯示 RSI 線圖
-	    trades = backtest_rsi(df)
-	    st.write("回測產生交易數：", len(trades))
-	    st.write(trades[:5])
-	    plot_chart(df, trades, "RSI 策略回測圖")
-    elif strategy == choices_strategies[2]:
-	    df['MACD'], df['Signal'], df['Hist'] = calculate_macd(df)
-	    st.line_chart(df[['MACD', 'Signal']])
-	    trades = backtest_macd(df)
-	    st.write("回測產生交易數：", len(trades))
-	    st.write(trades[:5])
-	    plot_chart(df, trades, "MACD 策略回測圖")
-    elif strategy == choices_strategies[3]:
-	    df['SMA'], df['BB_Upper'], df['BB_Lower'] = calculate_bb(df)
-	    st.line_chart(df[['close', 'BB_Upper', 'BB_Lower']])
-	    trades = backtest_bb(df)
-	    st.write("回測產生交易數：", len(trades))
-	    st.write(trades[:5])
-	    plot_chart(df, trades, "布林通道 策略回測圖")
+elif strategy == choices_strategies[3]:
+    df['SMA'], df['BB_Upper'], df['BB_Lower'] = calculate_bb(df)
+    st.line_chart(df[['close', 'BB_Upper', 'BB_Lower']])
+    trades = backtest_bb(df)
+    st.write("回測產生交易數：", len(trades))
+    st.write(trades[:5])
+    plot_chart(df, trades, "布林通道 策略回測圖")
+
 
 	    trades = backtest_rsi(df)
 	    st.write("回測產生交易數：", len(trades))
