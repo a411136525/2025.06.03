@@ -648,8 +648,7 @@ choice_strategy = st.selectbox('選擇交易策略', choices_strategies, index=0
 
 #%%
 ###### 各別不同策略參數設定 & 回測
-#if choice_strategy == '<進場>: 移動平均線黃金交叉作多,死亡交叉作空. <出場>: 結算平倉(期貨), 移動停損.':
-from  backtest_module import 
+#if choice_strategy == '<進場>: 移動平均線黃金交叉作多,死亡交叉作空. <出場>: 結算平倉(期貨), 移動停損.': 
 if choice_strategy == choices_strategies[0]:
     ##### 選擇參數
     with st.expander("<策略參數設定>: 交易停損量、長移動平均線(MA)的K棒週期數目、短移動平均線(MA)的K棒週期數目、購買數量"):
