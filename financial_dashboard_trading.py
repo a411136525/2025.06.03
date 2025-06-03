@@ -724,7 +724,206 @@ if choice_strategy == choices_strategies[0]:
 
     ##### 繪製K線圖加上MA以及下單點位    
     ChartOrder_MA(KBar_df,OrderRecord.GetTradeRecord())
-    
+def calculate_rsi(df, period=14):
+    delta = df['close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
+
+def calculate_macd(df):
+    ema_fast = df['close'].ewm(span=12).mean()
+    ema_slow = df['close'].ewm(span=26).mean()
+    macd = ema_fast - ema_slow
+    signal = macd.ewm(span=9).mean()
+    hist = macd - signal
+    return macd, signal, hist
+
+def calculate_bb(df, period=20, num_std=2):
+    sma = df['close'].rolling(window=period).mean()
+    std = df['close'].rolling(window=period).std()
+    upper = sma + std * num_std
+    lower = sma - std * num_std
+    return sma, upper, lower
+
+# ---------- 回測與圖形 ----------
+def backtest_ma(df, long_period, short_period, stop_loss):
+    df['MA_long'] = calculate_ma(df, long_period)
+    df['MA_short'] = calculate_ma(df, short_period)
+    trades = []
+    pos = 0
+    stop = None
+    for i in range(1, len(df)-1):
+        if np.isnan(df['MA_long'][i-1]): continue
+        if pos == 0:
+            if df['MA_short'][i-1] <= df['MA_long'][i-1] and df['MA_short'][i] > df['MA_long'][i]:
+                pos = 1
+                entry = df.iloc[i+1]
+                stop = entry['open'] - stop_loss
+                trades.append(['Buy', entry['time'], entry['open']])
+            elif df['MA_short'][i-1] >= df['MA_long'][i-1] and df['MA_short'][i] < df['MA_long'][i]:
+                pos = -1
+                entry = df.iloc[i+1]
+                stop = entry['open'] + stop_loss
+                trades.append(['Sell', entry['time'], entry['open']])
+        elif pos == 1:
+            if df['close'][i] < stop:
+                exit = df.iloc[i+1]
+                trades.append(['Sell', exit['time'], exit['open']])
+                pos = 0
+        elif pos == -1:
+            if df['close'][i] > stop:
+                exit = df.iloc[i+1]
+                trades.append(['Buy', exit['time'], exit['open']])
+                pos = 0
+    return trades
+
+def backtest_rsi(df, low=30, high=70, exit_level=50):
+    df['RSI'] = calculate_rsi(df)
+    trades = []
+    pos = 0
+    for i in range(1, len(df)-1):
+        rsi = df['RSI'][i]
+        if np.isnan(rsi): continue
+        if pos == 0:
+            if rsi < low:
+                pos = 1
+                entry = df.iloc[i+1]
+                trades.append(['Buy', entry['time'], entry['open']])
+            elif rsi > high:
+                pos = -1
+                entry = df.iloc[i+1]
+                trades.append(['Sell', entry['time'], entry['open']])
+        elif pos == 1 and rsi > exit_level:
+            exit = df.iloc[i+1]
+            trades.append(['Sell', exit['time'], exit['open']])
+            pos = 0
+        elif pos == -1 and rsi < exit_level:
+            exit = df.iloc[i+1]
+            trades.append(['Buy', exit['time'], exit['open']])
+            pos = 0
+    return trades
+
+def backtest_macd(df):
+    df['MACD'], df['Signal'], df['Hist'] = calculate_macd(df)
+    trades = []
+    pos = 0
+    for i in range(1, len(df)-1):
+        macd1, macd2 = df['MACD'][i-1], df['MACD'][i]
+        sig1, sig2 = df['Signal'][i-1], df['Signal'][i]
+        if np.isnan(macd1) or np.isnan(sig1): continue
+        if pos == 0:
+            if macd1 <= sig1 and macd2 > sig2:
+                pos = 1
+                entry = df.iloc[i+1]
+                trades.append(['Buy', entry['time'], entry['open']])
+            elif macd1 >= sig1 and macd2 < sig2:
+                pos = -1
+                entry = df.iloc[i+1]
+                trades.append(['Sell', entry['time'], entry['open']])
+        elif pos == 1 and macd2 < sig2:
+            exit = df.iloc[i+1]
+            trades.append(['Sell', exit['time'], exit['open']])
+            pos = 0
+        elif pos == -1 and macd2 > sig2:
+            exit = df.iloc[i+1]
+            trades.append(['Buy', exit['time'], exit['open']])
+            pos = 0
+    return trades
+
+def backtest_bb(df):
+    df['SMA'], df['BB_Upper'], df['BB_Lower'] = calculate_bb(df)
+    trades = []
+    pos = 0
+    for i in range(1, len(df)-1):
+        close = df['close'][i]
+        upper = df['BB_Upper'][i]
+        lower = df['BB_Lower'][i]
+        sma = df['SMA'][i]
+        if np.isnan(upper): continue
+        if pos == 0:
+            if close < lower:
+                pos = 1
+                entry = df.iloc[i+1]
+                trades.append(['Buy', entry['time'], entry['open']])
+            elif close > upper:
+                pos = -1
+                entry = df.iloc[i+1]
+                trades.append(['Sell', entry['time'], entry['open']])
+        elif pos == 1 and close > sma:
+            exit = df.iloc[i+1]
+            trades.append(['Sell', exit['time'], exit['open']])
+            pos = 0
+        elif pos == -1 and close < sma:
+            exit = df.iloc[i+1]
+            trades.append(['Buy', exit['time'], exit['open']])
+            pos = 0
+    return trades
+
+def evaluate_performance(trades):
+    profits = []
+    for i in range(0, len(trades)-1, 2):
+        entry = trades[i][2]
+        exit = trades[i+1][2]
+        pnl = exit - entry if trades[i][0] == 'Buy' else entry - exit
+        profits.append(pnl)
+    total_profit = sum(profits)
+    win_rate = sum(1 for p in profits if p > 0) / len(profits) if profits else 0
+    max_drawdown = min(np.cumsum(profits)) if profits else 0
+    return total_profit, win_rate, max_drawdown
+
+# ---------- 圖形 ----------
+def plot_chart(df, trades, title):
+    fig = make_subplots(rows=1, cols=1, specs=[[{"secondary_y": False}]])
+    fig.add_trace(go.Candlestick(x=df['time'], open=df['open'], high=df['high'],
+                                 low=df['low'], close=df['close'], name='K線'))
+    buy_x, buy_y, sell_x, sell_y = [], [], [], []
+    for t in range(0, len(trades), 2):
+        if trades[t][0] == 'Buy':
+            buy_x.append(trades[t][1])
+            buy_y.append(trades[t][2])
+            sell_x.append(trades[t+1][1])
+            sell_y.append(trades[t+1][2])
+        else:
+            sell_x.append(trades[t][1])
+            sell_y.append(trades[t][2])
+            buy_x.append(trades[t+1][1])
+            buy_y.append(trades[t+1][2])
+    fig.add_trace(go.Scatter(x=buy_x, y=buy_y, mode='markers', marker=dict(color='green', symbol='triangle-up', size=10), name='進場'))
+    fig.add_trace(go.Scatter(x=sell_x, y=sell_y, mode='markers', marker=dict(color='red', symbol='triangle-down', size=10), name='出場'))
+    fig.update_layout(title=title, xaxis_rangeslider_visible=False)
+    st.plotly_chart(fig, use_container_width=True)
+
+ strategy = st.selectbox("選擇策略", choices_strategies)
+
+    if strategy == choices_strategies[0]:
+        st.subheader("MA 策略參數")
+        long_p = st.slider("長期 MA 週期", 5, 60, 20)
+        short_p = st.slider("短期 MA 週期", 1, 20, 5)
+        stop_loss = st.slider("移動停損 (元/點)", 1, 100, 30)
+        trades = backtest_ma(df, long_p, short_p, stop_loss)
+        plot_chart(df, trades, "MA 策略回測圖")
+
+    elif strategy == choices_strategies[1]:
+        trades = backtest_rsi(df)
+        plot_chart(df, trades, "RSI 策略回測圖")
+
+    elif strategy == choices_strategies[2]:
+        trades = backtest_macd(df)
+        plot_chart(df, trades, "MACD 策略回測圖")
+
+    elif strategy == choices_strategies[3]:
+        trades = backtest_bb(df)
+        plot_chart(df, trades, "布林通道 策略回測圖")
+
+    # 顯示績效統計
+    if trades:
+        total_profit, win_rate, max_drawdown = evaluate_performance(trades)
+        st.subheader("📈 績效統計報表")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("總報酬", f"{total_profit:.2f}")
+        col2.metric("勝率", f"{win_rate*100:.2f}%")
+        col3.metric("最大虧損", f"{max_drawdown:.2f}")
     
 # RSI策略
 if choice_strategy == choices_strategies[1]:  
