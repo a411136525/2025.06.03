@@ -22,11 +22,12 @@ class KBar():
     # 更新最新報價
 def AddPrice(self, time, open_price, close_price, low_price, high_price, volume):
     # 同一根K棒
-    if time <= self.current:
+    if time <= self.current: 
+       if self.TAKBar['close'].size > 0:
         self.TAKBar['volume'][-1] += volume# 更新成交量
         self.TAKBar['high'][-1] = max(self.TAKBar['high'][-1], high_price)# 更新最高價
         self.TAKBar['low'][-1] = min(self.TAKBar['low'][-1], low_price) # 更新最低價
-        else:# 如果資料為空，初始化第一筆資料
+       else:# 如果資料為空，初始化第一筆資料
             self.TAKBar['time'] = np.append(self.TAKBar['time'], self.current)
             self.TAKBar['open'] = np.append(self.TAKBar['open'], open_price)
             self.TAKBar['high'] = np.append(self.TAKBar['high'], high_price)
