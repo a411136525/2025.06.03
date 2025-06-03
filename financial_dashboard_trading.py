@@ -906,6 +906,8 @@ def plot_chart(df, trades, title):
 
     elif strategy == choices_strategies[1]:
         trades = backtest_rsi(df)
+	st.write("回測產生交易數：", len(trades))
+	st.write(trades[:5])  # 顯示前幾筆
         plot_chart(df, trades, "RSI 策略回測圖")
 
     elif strategy == choices_strategies[2]:
