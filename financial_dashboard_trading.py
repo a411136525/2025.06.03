@@ -199,6 +199,7 @@ with st.expander("設定K棒相關參數:"):
 ###### 進行 K 棒更新  & 形成 KBar 字典 (新週期的)
 KBar_dic = Change_Cycle(Date,cycle_duration,KBar_dic,product_name)   ## 設定cycle_duration可以改成你想要的 KBar 週期
 
+
 ###### 將K線 Dictionary 轉換成 Dataframe
 KBar_df = pd.DataFrame(KBar_dic)
 
