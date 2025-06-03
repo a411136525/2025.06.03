@@ -874,6 +874,9 @@ if choice_strategy == choices_strategies[3]:
 
 #%%
 ##### 定義計算績效函數:
+OrderRecord = MyOrderRecordClass()  # 你自己的類別
+OrderRecord.GetTotalProfit()
+
 def 計算績效(合約乘數):
     交易總盈虧 = OrderRecord.GetTotalProfit() * 合約乘數
     平均每次盈虧 = OrderRecord.GetAverageProfit() * 合約乘數
