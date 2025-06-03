@@ -24,7 +24,10 @@ class KBar():
         # 同一根K棒
         if time <= self.current:
             # 更新收盤價
-            self.TAKBar['close'][-1] = close_price
+          if self.TAKBar['close']:
+              self.TAKBar['close'][-1] = close_price
+          else:
+              self.TAKBar['close'].append(close_price)
             # 更新成交量
             self.TAKBar['volume'][-1] += volume  
             # 更新最高價
