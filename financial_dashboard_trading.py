@@ -63,7 +63,7 @@ if choice == choices[1] :                   ##'統一期貨CQF: 2023.4.17 至 20
     df_original = load_data('future_KBar_CQF_2023-04-17_To_2025-04-17.pkl')
     product_name = '統一期貨CQF'
 if choice == choices[2] :                              ##'中鋼期貨CBF: 2023.4.17 至 2025.4.17':
-    df_original = load_data('future_KBar_CBF_2023-04-17_To_2025-04-171.pkl')
+    df_original = load_data('future_KBar_CBF_2023-04-17_To_2025-04-17.pkl')
     product_name = '中鋼期貨CBF'
 if choice == choices[3] :                                           ##'聯電期貨CCF:2023.4.17 至 2025.4.17':
     df_original = load_data('future_KBar_CCF_2023-04-17_To_2025-04-17.pkl')
