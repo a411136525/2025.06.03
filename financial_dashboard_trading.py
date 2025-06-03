@@ -20,8 +20,6 @@ import streamlit.components.v1 as stc
 from order_streamlit import Record
 import matplotlib.pyplot as plt
 import matplotlib
-import datetime
-
 
 #%%
 ####### (1) 開始設定 #######
@@ -37,11 +35,9 @@ stc.html(html_temp)
 
 ###### 讀取資料
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")  ## Add the caching decorator
-
 def load_data(path):
     df = pd.read_pickle(path)
     return df
-
 # ##### 讀取 excel 檔
 # df_original = pd.read_excel("kbars_2330_2022-01-01-2022-11-18.xlsx")
 
@@ -198,7 +194,6 @@ with st.expander("設定K棒相關參數:"):
 
 ###### 進行 K 棒更新  & 形成 KBar 字典 (新週期的)
 KBar_dic = Change_Cycle(Date,cycle_duration,KBar_dic,product_name)   ## 設定cycle_duration可以改成你想要的 KBar 週期
-
 
 ###### 將K線 Dictionary 轉換成 Dataframe
 KBar_df = pd.DataFrame(KBar_dic)
@@ -877,61 +872,56 @@ if choice_strategy == choices_strategies[3]:
 
 #%%
 ##### 定義計算績效函數:
-def 計算績效_股票():
-    交易總盈虧 = OrderRecord.GetTotalProfit()*1000          ## 取得交易總盈虧
-    平均每次盈虧 = OrderRecord.GetAverageProfit()*1000         ## 取得交易 "平均" 盈虧(每次)
-    平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
-    平均獲利_只看獲利的 = OrderRecord.GetAverEarn()*1000              ## 平均獲利(只看獲利的) 
-    平均虧損_只看虧損的 = OrderRecord.GetAverLoss()*1000              ## 平均虧損(只看虧損的)
-    勝率 = OrderRecord.GetWinRate()              ## 勝率
-    最大連續虧損 = OrderRecord.GetAccLoss()*1000               ## 最大連續虧損
-    最大盈虧回落_MDD = OrderRecord.GetMDD()*1000                   ## 最大利潤(盈虧)回落(MDD). 這個不是一般的 "資金" 或 "投資報酬率" 的回落
-    if 最大盈虧回落_MDD>0:
-        報酬風險比 = 交易總盈虧/最大盈虧回落_MDD
+def 計算績效(合約乘數):
+    交易總盈虧 = OrderRecord.GetTotalProfit() * 合約乘數
+    平均每次盈虧 = OrderRecord.GetAverageProfit() * 合約乘數
+    平均投資報酬率 = OrderRecord.GetAverageProfitRate()
+    平均獲利_只看獲利的 = OrderRecord.GetAverEarn() * 合約乘數
+    平均虧損_只看虧損的 = OrderRecord.GetAverLoss() * 合約乘數
+    勝率 = OrderRecord.GetWinRate()
+    最大連續虧損 = OrderRecord.GetAccLoss() * 合約乘數
+    最大盈虧回落_MDD = OrderRecord.GetMDD() * 合約乘數
+
+    if 最大盈虧回落_MDD > 0:
+        報酬風險比 = 交易總盈虧 / 最大盈虧回落_MDD
     else:
-        報酬風險比='資料不足無法計算'
-    return 交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比
+        報酬風險比 = '資料不足無法計算'
 
+    return (
+        交易總盈虧,
+        平均每次盈虧,
+        平均投資報酬率,
+        平均獲利_只看獲利的,
+        平均虧損_只看虧損的,
+        勝率,
+        最大連續虧損,
+        最大盈虧回落_MDD,
+        報酬風險比
+    )
 
-def 計算績效_大台指期貨():
-    交易總盈虧 = OrderRecord.GetTotalProfit()*200          ## 取得交易總盈虧
-    平均每次盈虧 = OrderRecord.GetAverageProfit()*200         ## 取得交易 "平均" 盈虧(每次)
-    平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
-    平均獲利_只看獲利的 = OrderRecord.GetAverEarn()*200              ## 平均獲利(只看獲利的) 
-    平均虧損_只看虧損的 = OrderRecord.GetAverLoss()*200              ## 平均虧損(只看虧損的)
-    勝率 = OrderRecord.GetWinRate()              ## 勝率
-    最大連續虧損 = OrderRecord.GetAccLoss()*200               ## 最大連續虧損
-    最大盈虧回落_MDD = OrderRecord.GetMDD()*200                   ## 最大利潤(盈虧)回落(MDD). 這個不是一般的 "資金" 或 "投資報酬率" 的回落
-    if 最大盈虧回落_MDD>0:
-        報酬風險比 = 交易總盈虧/最大盈虧回落_MDD
-    else:
-        報酬風險比='資料不足無法計算'
-    return 交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比
+績效_CMF = 計算績效(1000)
+績效_CQF = 計算績效(200)
+績效_CBF = 計算績效(50)
+績效_CCF = 計算績效(50)
 
+def 計算績效_CMF():
+    return 計算績效(1000)
 
-def 計算績效_小台指期貨():
-    交易總盈虧 = OrderRecord.GetTotalProfit()*50          ## 取得交易總盈虧
-    平均每次盈虧 = OrderRecord.GetAverageProfit()*50         ## 取得交易 "平均" 盈虧(每次)
-    平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
-    平均獲利_只看獲利的 = OrderRecord.GetAverEarn()*50              ## 平均獲利(只看獲利的) 
-    平均虧損_只看虧損的 = OrderRecord.GetAverLoss()*50              ## 平均虧損(只看虧損的)
-    勝率 = OrderRecord.GetWinRate()              ## 勝率
-    最大連續虧損 = OrderRecord.GetAccLoss()*50               ## 最大連續虧損
-    最大盈虧回落_MDD = OrderRecord.GetMDD()*50                   ## 最大利潤(盈虧)回落(MDD). 這個不是一般的 "資金" 或 "投資報酬率" 的回落
-    if 最大盈虧回落_MDD>0:
-        報酬風險比 = 交易總盈虧/最大盈虧回落_MDD
-    else:
-        報酬風險比='資料不足無法計算'
-    return 交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比
+def 計算績效_CQF():
+    return 計算績效(200)
 
+def 計算績效_CBF():
+    return 計算績效(50)
 
+def 計算績效_CCF():
+    return 計算績效(50)
 
 
 
 #%%
 ##### 根據不同類別金融產品選擇不同績效函數並計算績效(股票, 股票期貨, 大台指, 小台指)
 if choice == choices[0] :   ##'台積電: 2022.1.1 至 2024.4.9':
-    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_股票()
+    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_CMF()
     # 交易總盈虧 = OrderRecord.GetTotalProfit()*1000          ## 取得交易總盈虧
     # 平均每次盈虧 = OrderRecord.GetAverageProfit()*1000         ## 取得交易 "平均" 盈虧(每次)
     # 平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
@@ -946,7 +936,7 @@ if choice == choices[0] :   ##'台積電: 2022.1.1 至 2024.4.9':
     #     報酬風險比='資料不足無法計算'
 
 if choice == choices[1] :   #'大台指期貨2024.12到期: 2023.12 至 2024.4.11':
-    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_大台指期貨()
+    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_CQF()
 
     # 交易總盈虧 = OrderRecord.GetTotalProfit()*200          ## 取得交易總盈虧
     # 平均每次盈虧 = OrderRecord.GetAverageProfit() *200       ## 取得交易 "平均" 盈虧(每次)
@@ -962,7 +952,7 @@ if choice == choices[1] :   #'大台指期貨2024.12到期: 2023.12 至 2024.4.1
     #     報酬風險比='資料不足無法計算'
 
 if choice == choices[2] :   #'小台指期貨2024.12到期: 2023.12 至 2024.4.11':
-    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_小台指期貨()
+    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_CBF()
     # 交易總盈虧 = OrderRecord.GetTotalProfit()*50          ## 取得交易總盈虧
     # 平均每次盈虧 = OrderRecord.GetAverageProfit() *50       ## 取得交易 "平均" 盈虧(每次)
     # 平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
@@ -977,7 +967,7 @@ if choice == choices[2] :   #'小台指期貨2024.12到期: 2023.12 至 2024.4.1
     #     報酬風險比='資料不足無法計算'
 
 if choice == choices[3] :   #'英業達2020.1.2 至 2024.4.12':
-    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_股票()
+    交易總盈虧,平均每次盈虧,平均投資報酬率,平均獲利_只看獲利的,平均虧損_只看虧損的,勝率,最大連續虧損,最大盈虧回落_MDD,報酬風險比 = 計算績效_CCF()
     # 交易總盈虧 = OrderRecord.GetTotalProfit()*1000          ## 取得交易總盈虧
     # 平均每次盈虧 = OrderRecord.GetAverageProfit()*1000         ## 取得交易 "平均" 盈虧(每次)
     # 平均投資報酬率 = OrderRecord.GetAverageProfitRate()    ## 取得交易 "平均" 投資報酬率(每次)  
