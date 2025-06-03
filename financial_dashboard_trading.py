@@ -20,6 +20,8 @@ import streamlit.components.v1 as stc
 from order_streamlit import Record
 import matplotlib.pyplot as plt
 import matplotlib
+import datetime
+
 
 #%%
 ####### (1) 開始設定 #######
