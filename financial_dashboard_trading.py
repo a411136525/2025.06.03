@@ -874,7 +874,7 @@ if choice_strategy == choices_strategies[3]:
 
 #%%
 ##### 定義計算績效函數:
-OrderRecord = MyOrderRecordClass()  # 你自己的類別
+OrderRecord = Record()
 OrderRecord.GetTotalProfit()
 
 def 計算績效(合約乘數):
