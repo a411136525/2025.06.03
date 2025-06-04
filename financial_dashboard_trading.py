@@ -933,8 +933,8 @@ elif strategy == choices_strategies[3]:
 
 
     # 顯示績效統計
-    if trades:
-        total_profit, win_rate, max_drawdown = evaluate_performance(trades)
+if trades:
+	total_profit, win_rate, max_drawdown = evaluate_performance(trades)
         st.subheader("📈 績效統計報表")
         col1, col2, col3 = st.columns(3)
         col1.metric("總報酬", f"{total_profit:.2f}")
