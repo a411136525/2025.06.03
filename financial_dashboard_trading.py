@@ -934,12 +934,12 @@ elif strategy == choices_strategies[3]:
 
     # 顯示績效統計
 if trades:
-	total_profit, win_rate, max_drawdown = evaluate_performance(trades)
-        st.subheader("📈 績效統計報表")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("總報酬", f"{total_profit:.2f}")
-        col2.metric("勝率", f"{win_rate*100:.2f}%")
-        col3.metric("最大虧損", f"{max_drawdown:.2f}")
+    total_profit, win_rate, max_drawdown = evaluate_performance(trades)
+    st.subheader("📈 績效統計報表")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("總報酬", f"{total_profit:.2f}")
+    col2.metric("勝率", f"{win_rate*100:.2f}%")
+    col3.metric("最大虧損", f"{max_drawdown:.2f}")
     
 # RSI策略
 if choice_strategy == choices_strategies[1]:  
