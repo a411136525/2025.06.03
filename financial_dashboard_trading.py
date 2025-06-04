@@ -748,6 +748,9 @@ def calculate_bb(df, period=20, num_std=2):
     return sma, upper, lower
 
 # ---------- 回測與圖形 ----------
+def calculate_ma(df, period):
+    return df['close'].rolling(window=period).mean()
+
 def backtest_ma(df, long_period, short_period, stop_loss):
     df['MA_long'] = calculate_ma(df, long_period)
     df['MA_short'] = calculate_ma(df, short_period)
