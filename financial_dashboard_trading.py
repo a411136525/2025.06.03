@@ -882,17 +882,20 @@ def plot_chart(df, trades, title):
     fig.add_trace(go.Candlestick(x=df['time'], open=df['open'], high=df['high'],
                                  low=df['low'], close=df['close'], name='K線'))
     buy_x, buy_y, sell_x, sell_y = [], [], [], []
-    for t in range(0, len(trades), 2):
-        if trades[t][0] == 'Buy':
-            buy_x.append(trades[t][1])
-            buy_y.append(trades[t][2])
-            sell_x.append(trades[t+1][1])
-            sell_y.append(trades[t+1][2])
+    for t in range(0, len(trades)-1, 2):
+        action1, time1, price1 = trades[t]
+	action2, time2, price2 = trades[t+1]
+	
+	if action1 == 'Buy':
+            buy_x.append(time1)
+            buy_y.append(price1)
+            sell_x.append(time2)
+            sell_y.append(price2)
         else:
-            sell_x.append(trades[t][1])
-            sell_y.append(trades[t][2])
-            buy_x.append(trades[t+1][1])
-            buy_y.append(trades[t+1][2])
+            sell_x.append(time1)
+            sell_y.append(price1)
+            buy_x.append(time2)
+            buy_y.append(price2)
     fig.add_trace(go.Scatter(x=buy_x, y=buy_y, mode='markers', marker=dict(color='green', symbol='triangle-up', size=10), name='進場'))
     fig.add_trace(go.Scatter(x=sell_x, y=sell_y, mode='markers', marker=dict(color='red', symbol='triangle-down', size=10), name='出場'))
     fig.update_layout(title=title, xaxis_rangeslider_visible=False)
