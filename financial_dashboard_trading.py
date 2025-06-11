@@ -879,14 +879,17 @@ def evaluate_performance(trades):
 # ---------- 圖形 ----------
 def plot_chart(df, trades, title):
     fig = make_subplots(rows=1, cols=1, specs=[[{"secondary_y": False}]])
-    fig.add_trace(go.Candlestick(x=df['time'], open=df['open'], high=df['high'],
-                                 low=df['low'], close=df['close'], name='K線'))
+    fig.add_trace(go.Candlestick(
+        x=df['time'], open=df['open'], high=df['high'],
+        low=df['low'], close=df['close'], name='K線'))
+
     buy_x, buy_y, sell_x, sell_y = [], [], [], []
-    for t in range(0, len(trades)-1, 2):
+
+    for t in range(0, len(trades) - 1, 2):
         action1, time1, price1 = trades[t]
-	action2, time2, price2 = trades[t+1]
-	
-	if action1 == 'Buy':
+        action2, time2, price2 = trades[t + 1]
+
+        if action1 == 'Buy':
             buy_x.append(time1)
             buy_y.append(price1)
             sell_x.append(time2)
@@ -896,10 +899,30 @@ def plot_chart(df, trades, title):
             sell_y.append(price1)
             buy_x.append(time2)
             buy_y.append(price2)
-    fig.add_trace(go.Scatter(x=buy_x, y=buy_y, mode='markers', marker=dict(color='green', symbol='triangle-up', size=10), name='進場'))
-    fig.add_trace(go.Scatter(x=sell_x, y=sell_y, mode='markers', marker=dict(color='red', symbol='triangle-down', size=10), name='出場'))
+
+    # 處理落單的最後一筆交易（奇數筆）
+    if len(trades) % 2 != 0:
+        last_action, last_time, last_price = trades[-1]
+        if last_action == 'Buy':
+            buy_x.append(last_time)
+            buy_y.append(last_price)
+        else:
+            sell_x.append(last_time)
+            sell_y.append(last_price)
+
+    fig.add_trace(go.Scatter(
+        x=buy_x, y=buy_y, mode='markers',
+        marker=dict(color='green', symbol='triangle-up', size=10),
+        name='進場'))
+
+    fig.add_trace(go.Scatter(
+        x=sell_x, y=sell_y, mode='markers',
+        marker=dict(color='red', symbol='triangle-down', size=10),
+        name='出場'))
+
     fig.update_layout(title=title, xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
+
 
 strategy = st.selectbox("選擇策略", choices_strategies)
 
